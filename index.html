@@ -7,497 +7,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background: #0d0d14;
-      color: #f0ece0;
-      font-family: system-ui, sans-serif;
-      min-height: 100vh;
-    }
-
-    /* ── CONTROL PANEL ── */
-    #control-panel {
-      padding: 24px;
-      display: block;
-    }
-
-    #display-view {
-      display: none;
-      min-height: 100vh;
-      background: radial-gradient(ellipse at center, #0a0a1a 0%, #000 100%);
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      padding: 60px 40px;
-      font-family: Georgia, serif;
-      position: relative;
-      text-align: center;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 28px;
-    }
-
-    .label {
-      font-size: 11px;
-      letter-spacing: 4px;
-      color: #b48c3c;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    h1 { font-size: 22px; font-weight: 700; color: #f5f0e8; }
-
-    .btn-display {
-      background: linear-gradient(135deg, #b48c3c, #8a6820);
-      border: none; color: #fff;
-      padding: 10px 20px; border-radius: 8px;
-      cursor: pointer; font-size: 13px; font-weight: 600;
-      letter-spacing: 1px;
-    }
-
-    .btn-back {
-      position: fixed; top: 16px; right: 16px; z-index: 999;
-      background: rgba(180,140,60,0.15);
-      border: 1px solid rgba(180,140,60,0.4);
-      color: #b48c3c; padding: 8px 16px; border-radius: 6px;
-      cursor: pointer; font-size: 13px; font-family: sans-serif;
-      display: none;
-    }
-
-    .status-bar {
-      background: #13131e;
-      border-radius: 8px;
-      padding: 12px 16px;
-      margin-bottom: 24px;
-      font-size: 13px;
-      display: flex; align-items: center; gap: 8px;
-      border-left: 3px solid #666;
-      color: #666;
-    }
-
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #666; flex-shrink: 0;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    @media (max-width: 600px) {
-      .grid { grid-template-columns: 1fr; }
-    }
-
-    .card {
-      background: #13131e;
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid #1e1e2e;
-    }
-
-    .btn-mic {
-      width: 100%; padding: 16px;
-      border-radius: 10px; border: none;
-      background: linear-gradient(135deg, #1a4a2e, #27ae60);
-      color: #fff; font-size: 16px; font-weight: 700;
-      cursor: pointer; margin-bottom: 16px;
-    }
-
-    .btn-mic.active {
-      background: linear-gradient(135deg, #8b1a1a, #c0392b);
-    }
-
-    .transcript-box {
-      background: #0a0a14;
-      border-radius: 8px; padding: 12px;
-      font-size: 13px; display: none;
-    }
-
-    .transcript-label {
-      color: #666; font-size: 11px;
-      margin-bottom: 6px; letter-spacing: 2px;
-    }
-
-    .transcript-text { color: #e0d8c0; line-height: 1.5; }
-    .detected-ref { margin-top: 8px; color: #b48c3c; font-size: 12px; }
-
-    .input-group { margin-bottom: 10px; }
-    .input-label { font-size: 11px; color: #666; margin-bottom: 4px; }
-
-    input {
-      width: 100%;
-      background: #0a0a14;
-      border: 1px solid #2a2a3e;
-      border-radius: 6px;
-      padding: 8px 12px;
-      color: #f0ece0;
-      font-size: 14px;
-      outline: none;
-      font-family: inherit;
-    }
-
-    input:focus { border-color: #b48c3c; }
-
-    .btn-search {
-      width: 100%; padding: 12px;
-      background: linear-gradient(135deg, #b48c3c, #8a6820);
-      border: none; border-radius: 8px;
-      color: #fff; font-size: 14px; font-weight: 600;
-      cursor: pointer; margin-top: 4px;
-    }
-
-    .verse-card {
-      background: #13131e;
-      border-radius: 12px; padding: 20px;
-      border: 1px solid #2a2a1e;
-      border-left: 3px solid #b48c3c;
-      margin-bottom: 20px;
-      display: none;
-    }
-
-    .verse-ref {
-      font-size: 16px; font-weight: 700;
-      color: #b48c3c; margin-bottom: 10px;
-    }
-
-    .verse-text {
-      color: #e0d8c0; line-height: 1.8;
-      font-size: 15px; font-family: Georgia, serif;
-    }
-
-    .history-card {
-      background: #13131e;
-      border-radius: 12px; padding: 20px;
-      border: 1px solid #1e1e2e;
-      display: none;
-    }
-
-    .history-item {
-      display: flex; justify-content: space-between;
-      align-items: center; padding: 8px 12px;
-      border-radius: 6px; cursor: pointer;
-      margin-bottom: 4px;
-    }
-
-    .history-item:hover { background: rgba(180,140,60,0.1); }
-    .history-ref { color: #b48c3c; font-size: 14px; }
-    .history-time { color: #444; font-size: 11px; }
-
-    /* ── DISPLAY VIEW ── */
-    .display-watermark {
-      position: absolute; top: 30px; left: 50%;
-      transform: translateX(-50%);
-      font-size: 18px; color: rgba(180,140,60,0.3);
-      letter-spacing: 8px; text-transform: uppercase;
-      font-family: sans-serif;
-    }
-
-    .display-reference {
-      color: #b48c3c;
-      font-size: clamp(18px, 3vw, 28px);
-      font-family: sans-serif; font-weight: 600;
-      letter-spacing: 4px; text-transform: uppercase;
-      margin-bottom: 40px; opacity: 0.9;
-    }
-
-    .display-text {
-      color: #f5f0e8;
-      font-size: clamp(28px, 5vw, 56px);
-      line-height: 1.5; font-weight: 400;
-      text-shadow: 0 2px 20px rgba(180,140,60,0.2);
-      margin-bottom: 40px;
-      max-width: 900px;
-    }
-
-    .display-divider {
-      display: flex; align-items: center;
-      justify-content: center; gap: 16px;
-    }
-
-    .divider-line {
-      width: 80px; height: 1px;
-      background: linear-gradient(to right, transparent, #b48c3c);
-    }
-
-    .divider-line.right {
-      background: linear-gradient(to left, transparent, #b48c3c);
-    }
-
-    .display-waiting {
-      text-align: center;
-    }
-
-    .display-cross {
-      font-size: 80px; opacity: 0.2; margin-bottom: 24px;
-    }
-
-    .display-waiting-text {
-      color: rgba(245,240,232,0.3);
-      font-size: 24px; font-family: sans-serif; letter-spacing: 2px;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-  </style>
-</head>
-<body>
-
-<!-- ── CONTROL PANEL ── -->
-<div id="control-panel">
-  <div class="header">
-    <div>
-      <div class="label">✦ Church Bible System</div>
-      <h1>Scripture Control Panel</h1>
-    </div>
-    <button class="btn-display" onclick="openDisplay()">📺 Open Display</button>
-  </div>
-
-  <div class="status-bar" id="status-bar">
-    <div class="status-dot" id="status-dot"></div>
-    <span id="status-msg">Ready</span>
-  </div>
-
-  <div class="grid">
-    <!-- Mic -->
-    <div class="card">
-      <div class="label">🎤 Voice Detection</div>
-      <br/>
-      <button class="btn-mic" id="mic-btn" onclick="toggleMic()">▶ Start Listening</button>
-      <div class="transcript-box" id="transcript-box">
-        <div class="transcript-label">HEARD</div>
-        <div class="transcript-text" id="transcript-text"></div>
-        <div class="detected-ref" id="detected-ref"></div>
-      </div>
-    </div>
-
-    <!-- Manual Search -->
-    <div class="card">
-      <div class="label">🔍 Manual Search</div>
-      <br/>
-      <div class="input-group">
-        <div class="input-label">Book</div>
-        <input id="inp-book" placeholder="e.g. John" />
-      </div>
-      <div class="input-group">
-        <div class="input-label">Chapter</div>
-        <input id="inp-chapter" placeholder="e.g. 3" type="number" />
-      </div>
-      <div class="input-group">
-        <div class="input-label">Verse</div>
-        <input id="inp-verse" placeholder="e.g. 16" type="number" />
-      </div>
-      <div class="input-group">
-        <div class="input-label">End Verse (optional)</div>
-        <input id="inp-verse-end" placeholder="e.g. 18" type="number" />
-      </div>
-      <button class="btn-search" onclick="manualSearch()">Display Verse</button>
-    </div>
-  </div>
-
-  <!-- Current Verse -->
-  <div class="verse-card" id="verse-card">
-    <div class="label">📖 Now Displaying</div>
-    <br/>
-    <div class="verse-ref" id="verse-ref"></div>
-    <div class="verse-text" id="verse-text"></div>
-  </div>
-
-  <!-- History -->
-  <div class="history-card" id="history-card">
-    <div class="label" style="color:#666;">📋 Recent</div>
-    <br/>
-    <div id="history-list"></div>
-  </div>
-</div>
-
-<!-- ── DISPLAY VIEW ── -->
-<div id="display-view">
-  <button class="btn-back" id="btn-back" onclick="closeDisplay()">← Control Panel</button>
-  <div class="display-watermark">✦ Live Scripture ✦</div>
-
-  <div id="display-content">
-    <div class="display-waiting">
-      <div class="display-cross">✝</div>
-      <div class="display-waiting-text">Awaiting Scripture...</div>
-    </div>
-  </div>
-</div>
-
-<script>
-  // ── SUPABASE SETUP ──
-  const { createClient } = supabase;
-  const SUPABASE_URL = "https://kjyxnmgkjnpjtpdttblu.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqeXhubWdram5wanRwZHR0Ymx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MDg4NDgsImV4cCI6MjA5NzI4NDg0OH0.T3TphjnNLlKu911qp-CP6kqD2HBk_oR2h76EOUpAlaQ";
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  // ── BOOK ALIASES ──
-  const BOOKS = {
-    "gen":"Genesis","genesis":"Genesis","ex":"Exodus","exo":"Exodus","exodus":"Exodus",
-    "lev":"Leviticus","leviticus":"Leviticus","num":"Numbers","numbers":"Numbers",
-    "deut":"Deuteronomy","deuteronomy":"Deuteronomy","josh":"Joshua","joshua":"Joshua",
-    "judg":"Judges","judges":"Judges","ruth":"Ruth",
-    "1sam":"1 Samuel","1 sam":"1 Samuel","first samuel":"1 Samuel",
-    "2sam":"2 Samuel","2 sam":"2 Samuel","second samuel":"2 Samuel",
-    "1ki":"1 Kings","1 kings":"1 Kings","first kings":"1 Kings",
-    "2ki":"2 Kings","2 kings":"2 Kings","second kings":"2 Kings",
-    "1chr":"1 Chronicles","1 chronicles":"1 Chronicles",
-    "2chr":"2 Chronicles","2 chronicles":"2 Chronicles",
-    "ezra":"Ezra","neh":"Nehemiah","nehemiah":"Nehemiah",
-    "esth":"Esther","esther":"Esther","job":"Job",
-    "ps":"Psalms","psa":"Psalms","psalm":"Psalms","psalms":"Psalms",
-    "prov":"Proverbs","proverbs":"Proverbs","eccl":"Ecclesiastes","ecclesiastes":"Ecclesiastes",
-    "song":"Song of Solomon","songs":"Song of Solomon","sos":"Song of Solomon",
-    "isa":"Isaiah","isaiah":"Isaiah","jer":"Jeremiah","jeremiah":"Jeremiah",
-    "lam":"Lamentations","lamentations":"Lamentations",
-    "ezek":"Ezekiel","ezekiel":"Ezekiel","dan":"Daniel","daniel":"Daniel",
-    "hos":"Hosea","hosea":"Hosea","joel":"Joel","amos":"Amos",
-    "obad":"Obadiah","obadiah":"Obadiah","jon":"Jonah","jonah":"Jonah",
-    "mic":"Micah","micah":"Micah","nah":"Nahum","nahum":"Nahum",
-    "hab":"Habakkuk","habakkuk":"Habakkuk","zeph":"Zephaniah","zephaniah":"Zephaniah",
-    "hag":"Haggai","haggai":"Haggai","zech":"Zechariah","zechariah":"Zechariah",
-    "mal":"Malachi","malachi":"Malachi",
-    "matt":"Matthew","matthew":"Matthew","mark":"Mark","luke":"Luke",
-    "john":"John","jn":"John","acts":"Acts",
-    "rom":"Romans","romans":"Romans",
-    "1cor":"1 Corinthians","1 cor":"1 Corinthians","first corinthians":"1 Corinthians",
-    "2cor":"2 Corinthians","2 cor":"2 Corinthians","second corinthians":"2 Corinthians",
-    "gal":"Galatians","galatians":"Galatians","eph":"Ephesians","ephesians":"Ephesians",
-    "phil":"Philippians","philippians":"Philippians","col":"Colossians","colossians":"Colossians",
-    "1thess":"1 Thessalonians","1 thess":"1 Thessalonians",
-    "2thess":"2 Thessalonians","2 thess":"2 Thessalonians",
-    "1tim":"1 Timothy","1 tim":"1 Timothy","first timothy":"1 Timothy",
-    "2tim":"2 Timothy","2 tim":"2 Timothy","second timothy":"2 Timothy",
-    "titus":"Titus","tit":"Titus","philem":"Philemon","philemon":"Philemon",
-    "heb":"Hebrews","hebrews":"Hebrews","jas":"James","james":"James",
-    "1pet":"1 Peter","1 pet":"1 Peter","first peter":"1 Peter",
-    "2pet":"2 Peter","2 pet":"2 Peter","second peter":"2 Peter",
-    "1john":"1 John","1 john":"1 John","first john":"1 John",
-    "2john":"2 John","2 john":"2 John","3john":"3 John","3 john":"3 John",
-    "jude":"Jude","rev":"Revelation","revelation":"Revelation","revelations":"Revelation"
-  };
-
-  function normalizeBook(raw) {
-    const key = raw.toLowerCase().replace(/\./g, "").trim();
-    return BOOKS[key] || null;
-  }
-
-  function parseReference(text) {
-    const patterns = [
-      /(\d?\s?[a-zA-Z]+(?:\s[a-zA-Z]+)?)\s+(\d+)[:\s](\d+)(?:\s*[-–to]+\s*(\d+))?/i,
-      /(\d?\s?[a-zA-Z]+(?:\s[a-zA-Z]+)?)\s+(\d+)\s+verse[s]?\s+(\d+)(?:\s*(?:to|through|-)\s*(\d+))?/i,
-    ];
-    for (const p of patterns) {
-      const m = text.match(p);
-      if (m) {
-        const book = normalizeBook(m[1].trim());
-        const chapter = parseInt(m[2]);
-        const verseStart = parseInt(m[3]);
-        const verseEnd = m[4] ? parseInt(m[4]) : verseStart;
-        if (book && chapter && verseStart) return { book, chapter, verseStart, verseEnd };
-      }
-    }
-    return null;
-  }
-
-  // ── STATE ──
-  let listening = false;
-  let recognition = null;
-  let lastKey = "";
-  let history = [];
-  let currentVerse = null;
-
-  // ── STATUS ──
-  const colors = { idle: "#666", fetching: "#b48c3c", found: "#4caf79", error: "#e05555" };
-
-  function setStatus(type, msg) {
-    const bar = document.getElementById("status-bar");
-    const dot = document.getElementById("status-dot");
-    const msgEl = document.getElementById("status-msg");
-    bar.style.borderLeftColor = colors[type];
-    bar.style.color = colors[type];
-    dot.style.background = colors[type];
-    dot.style.animation = type === "fetching" ? "pulse 1s infinite" : "none";
-    msgEl.textContent = msg;
-  }
-
-  // ── FETCH VERSE ──
-  async function loadVerse(ref) {
-    const key = `${ref.book}-${ref.chapter}-${ref.verseStart}-${ref.verseEnd}`;
-    if (key === lastKey) return;
-    lastKey = key;
-
-    setStatus("fetching", `Looking up ${ref.book} ${ref.chapter}:${ref.verseStart}...`);
-
-    const { data, error } = await db
-      .from("bible")
-      .select("book, chapter, verse, text")
-      .eq("book", ref.book)
-      .eq("chapter", ref.chapter)
-      .gte("verse", ref.verseStart)
-      .lte("verse", ref.verseEnd)
-      .order("verse", { ascending: true });
-
-    if (error || !data || data.length === 0) {
-      setStatus("error", error ? "DB error: " + error.message : `Not found: ${ref.book} ${ref.chapter}:${ref.verseStart}`);
-      return;
-    }
-
-    const refStr = data.length > 1
-      ? `${ref.book} ${ref.chapter}:${ref.verseStart}–${data[data.length-1].verse}`
-      : `${ref.book} ${ref.chapter}:${ref.verseStart}`;
-
-    currentVerse = { reference: refStr, lines: data.map(d => ({ verse: d.verse, text: d.text })) };
-    setStatus("found", `Displaying ${refStr}`);
-    showVerseInControl(currentVerse);
-    showVerseOnDisplay(currentVerse);
-    addHistory(currentVerse);
-  }
-
-  function showVerseInControl(v) {
-    document.getElementById("verse-card").style.display = "block";
-    document.getElementById("verse-ref").textContent = v.reference;
-    let html = "";
-    v.lines.forEach(l => {
-      const sup = v.lines.length > 1 ? `<sup style="color:#b48c3c;font-size:0.7em;margin-right:3px;">${l.verse}</sup>` : "";
-      html += `<span>${sup}${l.text} </span>`;
-    });
-    document.getElementById("verse-text").innerHTML = html;
-  }
-
-  function showVerseOnDisplay(v) {
-    let linesHtml = "";
-    v.lines.forEach(l => {
-      const sup = v.lines.length > 1 ? `<sup style="color:#b48c3c;font-size:0.5em;margin-right:6px;vertical-align:super;">${l.verse}</sup>` : "";
-      linesHtml += `<div style="margin-bottom:16px;">${sup}${l.text}</div>`;
-    });
-
-    document.getElementById("display-content").innerHTML = `
-      <div style="max-width:900px;">
-        <div class="display-reference">${v.reference}</div>
-        <div class="display-text">${linesHtml}</div>
-        <div class="display-divider">
-          <div class="divider-line"></div>
-          <div style="color:#b48c3c;font-size:16px;">✦</div>
-          <div class="divider-line right"></div>
-        </div>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Church Bible System</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0d0d14; color: #f0ece0; font-family: system-ui, sans-serif; min-height: 100vh; }
 
     #control-panel { padding: 24px; display: block; }
@@ -533,7 +42,6 @@
       display: flex; align-items: center; gap: 8px;
       border-left: 3px solid #666; color: #666;
     }
-
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #666; flex-shrink: 0; }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
@@ -548,7 +56,7 @@
     }
     .btn-mic.active { background: linear-gradient(135deg, #8b1a1a, #c0392b); }
 
-    .ai-badge {
+    .smart-badge {
       display: inline-flex; align-items: center; gap: 6px;
       background: rgba(180,140,60,0.1); border: 1px solid rgba(180,140,60,0.3);
       border-radius: 20px; padding: 4px 10px; font-size: 11px;
@@ -558,8 +66,7 @@
     .transcript-box { background: #0a0a14; border-radius: 8px; padding: 12px; font-size: 13px; display: none; }
     .transcript-label { color: #666; font-size: 11px; margin-bottom: 6px; letter-spacing: 2px; }
     .transcript-text { color: #e0d8c0; line-height: 1.5; margin-bottom: 8px; }
-    .detected-ref { color: #b48c3c; font-size: 12px; }
-    .ai-thinking { color: #666; font-size: 11px; font-style: italic; margin-top: 6px; display: none; }
+    .detected-ref { color: #b48c3c; font-size: 12px; min-height: 18px; }
 
     .input-group { margin-bottom: 10px; }
     .input-label { font-size: 11px; color: #666; margin-bottom: 4px; }
@@ -592,7 +99,6 @@
     .history-ref { color: #b48c3c; font-size: 14px; }
     .history-time { color: #444; font-size: 11px; }
 
-    /* Display view */
     .display-watermark {
       position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
       font-size: 18px; color: rgba(180,140,60,0.3);
@@ -615,13 +121,10 @@
     .display-waiting-text { color: rgba(245,240,232,0.3); font-size: 24px; font-family: sans-serif; letter-spacing: 2px; }
 
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid #b48c3c33; border-top-color: #b48c3c; border-radius: 50%; animation: spin 0.8s linear infinite; }
   </style>
 </head>
 <body>
 
-<!-- CONTROL PANEL -->
 <div id="control-panel">
   <div class="header">
     <div>
@@ -637,24 +140,19 @@
   </div>
 
   <div class="grid">
-    <!-- Mic -->
     <div class="card">
-      <div class="label">🎤 Voice Detection</div>
-      <br/>
-      <div class="ai-badge">✦ AI-Powered &nbsp;·&nbsp; Filters sermon speech</div>
+      <div class="label">🎤 Voice Detection</div><br/>
+      <div class="smart-badge">✦ Smart Detector &nbsp;·&nbsp; No API needed</div>
       <button class="btn-mic" id="mic-btn" onclick="toggleMic()">▶ Start Listening</button>
       <div class="transcript-box" id="transcript-box">
         <div class="transcript-label">HEARD</div>
         <div class="transcript-text" id="transcript-text"></div>
-        <div class="ai-thinking" id="ai-thinking"><span class="spinner"></span> &nbsp;AI scanning for Bible reference...</div>
         <div class="detected-ref" id="detected-ref"></div>
       </div>
     </div>
 
-    <!-- Manual Search -->
     <div class="card">
-      <div class="label">🔍 Manual Search</div>
-      <br/>
+      <div class="label">🔍 Manual Search</div><br/>
       <div class="input-group">
         <div class="input-label">Book</div>
         <input id="inp-book" placeholder="e.g. John" />
@@ -675,23 +173,18 @@
     </div>
   </div>
 
-  <!-- Current Verse -->
   <div class="verse-card" id="verse-card">
-    <div class="label">📖 Now Displaying</div>
-    <br/>
+    <div class="label">📖 Now Displaying</div><br/>
     <div class="verse-ref" id="verse-ref"></div>
     <div class="verse-text" id="verse-text"></div>
   </div>
 
-  <!-- History -->
   <div class="history-card" id="history-card">
-    <div class="label" style="color:#666;">📋 Recent</div>
-    <br/>
+    <div class="label" style="color:#666;">📋 Recent</div><br/>
     <div id="history-list"></div>
   </div>
 </div>
 
-<!-- DISPLAY VIEW -->
 <div id="display-view">
   <button class="btn-back" id="btn-back" onclick="closeDisplay()">← Control Panel</button>
   <div class="display-watermark">✦ Live Scripture ✦</div>
@@ -711,63 +204,188 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqeXhubWdram5wanRwZHR0Ymx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MDg4NDgsImV4cCI6MjA5NzI4NDg0OH0.T3TphjnNLlKu911qp-CP6kqD2HBk_oR2h76EOUpAlaQ"
   );
 
-  // ── BOOK ALIASES ──
+  // ── BOOK NAME MAP ──
+  // Maps every way a preacher might say a book name → standard DB name
   const BOOKS = {
-    "gen":"Genesis","genesis":"Genesis","ex":"Exodus","exo":"Exodus","exodus":"Exodus",
-    "lev":"Leviticus","leviticus":"Leviticus","num":"Numbers","numbers":"Numbers",
-    "deut":"Deuteronomy","deuteronomy":"Deuteronomy","josh":"Joshua","joshua":"Joshua",
-    "judg":"Judges","judges":"Judges","ruth":"Ruth",
-    "1sam":"1 Samuel","1 sam":"1 Samuel","first samuel":"1 Samuel",
-    "2sam":"2 Samuel","2 sam":"2 Samuel","second samuel":"2 Samuel",
-    "1ki":"1 Kings","1 kings":"1 Kings","first kings":"1 Kings",
-    "2ki":"2 Kings","2 kings":"2 Kings","second kings":"2 Kings",
-    "1chr":"1 Chronicles","1 chronicles":"1 Chronicles",
-    "2chr":"2 Chronicles","2 chronicles":"2 Chronicles",
-    "ezra":"Ezra","neh":"Nehemiah","nehemiah":"Nehemiah",
-    "esth":"Esther","esther":"Esther","job":"Job",
-    "ps":"Psalms","psa":"Psalms","psalm":"Psalms","psalms":"Psalms",
-    "prov":"Proverbs","proverbs":"Proverbs","eccl":"Ecclesiastes","ecclesiastes":"Ecclesiastes",
-    "song":"Song of Solomon","songs":"Song of Solomon","sos":"Song of Solomon",
-    "isa":"Isaiah","isaiah":"Isaiah","jer":"Jeremiah","jeremiah":"Jeremiah",
-    "lam":"Lamentations","lamentations":"Lamentations",
-    "ezek":"Ezekiel","ezekiel":"Ezekiel","dan":"Daniel","daniel":"Daniel",
-    "hos":"Hosea","hosea":"Hosea","joel":"Joel","amos":"Amos",
-    "obad":"Obadiah","obadiah":"Obadiah","jon":"Jonah","jonah":"Jonah",
-    "mic":"Micah","micah":"Micah","nah":"Nahum","nahum":"Nahum",
-    "hab":"Habakkuk","habakkuk":"Habakkuk","zeph":"Zephaniah","zephaniah":"Zephaniah",
-    "hag":"Haggai","haggai":"Haggai","zech":"Zechariah","zechariah":"Zechariah",
-    "mal":"Malachi","malachi":"Malachi",
-    "matt":"Matthew","matthew":"Matthew","mark":"Mark","luke":"Luke",
-    "john":"John","jn":"John","acts":"Acts",
-    "rom":"Romans","romans":"Romans",
-    "1cor":"1 Corinthians","1 cor":"1 Corinthians","first corinthians":"1 Corinthians",
-    "2cor":"2 Corinthians","2 cor":"2 Corinthians","second corinthians":"2 Corinthians",
-    "gal":"Galatians","galatians":"Galatians","eph":"Ephesians","ephesians":"Ephesians",
-    "phil":"Philippians","philippians":"Philippians","col":"Colossians","colossians":"Colossians",
-    "1thess":"1 Thessalonians","1 thess":"1 Thessalonians",
-    "2thess":"2 Thessalonians","2 thess":"2 Thessalonians",
-    "1tim":"1 Timothy","1 tim":"1 Timothy","first timothy":"1 Timothy",
-    "2tim":"2 Timothy","2 tim":"2 Timothy","second timothy":"2 Timothy",
-    "titus":"Titus","tit":"Titus","philem":"Philemon","philemon":"Philemon",
-    "heb":"Hebrews","hebrews":"Hebrews","jas":"James","james":"James",
-    "1pet":"1 Peter","1 pet":"1 Peter","first peter":"1 Peter",
-    "2pet":"2 Peter","2 pet":"2 Peter","second peter":"2 Peter",
-    "1john":"1 John","1 john":"1 John","first john":"1 John",
-    "2john":"2 John","2 john":"2 John","3john":"3 John","3 john":"3 John",
-    "jude":"Jude","rev":"Revelation","revelation":"Revelation","revelations":"Revelation"
+    "genesis":["genesis","gen"],
+    "Exodus":["exodus","ex","exo"],
+    "Leviticus":["leviticus","lev"],
+    "Numbers":["numbers","num"],
+    "Deuteronomy":["deuteronomy","deut","deu"],
+    "Joshua":["joshua","josh"],
+    "Judges":["judges","judg","jdg"],
+    "Ruth":["ruth"],
+    "1 Samuel":["1 samuel","first samuel","1samuel","1sam","1 sam"],
+    "2 Samuel":["2 samuel","second samuel","2samuel","2sam","2 sam"],
+    "1 Kings":["1 kings","first kings","1kings","1ki"],
+    "2 Kings":["2 kings","second kings","2kings","2ki"],
+    "1 Chronicles":["1 chronicles","first chronicles","1chronicles","1chr","1 chr"],
+    "2 Chronicles":["2 chronicles","second chronicles","2chronicles","2chr","2 chr"],
+    "Ezra":["ezra"],
+    "Nehemiah":["nehemiah","neh"],
+    "Esther":["esther","esth"],
+    "Job":["job"],
+    "Psalms":["psalms","psalm","ps","psa","the psalms"],
+    "Proverbs":["proverbs","prov","pro"],
+    "Ecclesiastes":["ecclesiastes","eccl","ecc"],
+    "Song of Solomon":["song of solomon","song of songs","songs","sos","song"],
+    "Isaiah":["isaiah","isa"],
+    "Jeremiah":["jeremiah","jer"],
+    "Lamentations":["lamentations","lam"],
+    "Ezekiel":["ezekiel","ezek","eze"],
+    "Daniel":["daniel","dan"],
+    "Hosea":["hosea","hos"],
+    "Joel":["joel"],
+    "Amos":["amos"],
+    "Obadiah":["obadiah","obad"],
+    "Jonah":["jonah","jon"],
+    "Micah":["micah","mic"],
+    "Nahum":["nahum","nah"],
+    "Habakkuk":["habakkuk","hab"],
+    "Zephaniah":["zephaniah","zeph"],
+    "Haggai":["haggai","hag"],
+    "Zechariah":["zechariah","zech"],
+    "Malachi":["malachi","mal"],
+    "Matthew":["matthew","matt","mat"],
+    "Mark":["mark"],
+    "Luke":["luke"],
+    "John":["john","jn","the gospel of john"],
+    "Acts":["acts","acts of the apostles"],
+    "Romans":["romans","rom"],
+    "1 Corinthians":["1 corinthians","first corinthians","1corinthians","1cor","1 cor"],
+    "2 Corinthians":["2 corinthians","second corinthians","2corinthians","2cor","2 cor"],
+    "Galatians":["galatians","gal"],
+    "Ephesians":["ephesians","eph"],
+    "Philippians":["philippians","phil"],
+    "Colossians":["colossians","col"],
+    "1 Thessalonians":["1 thessalonians","first thessalonians","1thess","1 thess"],
+    "2 Thessalonians":["2 thessalonians","second thessalonians","2thess","2 thess"],
+    "1 Timothy":["1 timothy","first timothy","1timothy","1tim","1 tim"],
+    "2 Timothy":["2 timothy","second timothy","2timothy","2tim","2 tim"],
+    "Titus":["titus","tit"],
+    "Philemon":["philemon","philem"],
+    "Hebrews":["hebrews","heb"],
+    "James":["james","jas"],
+    "1 Peter":["1 peter","first peter","1peter","1pet","1 pet"],
+    "2 Peter":["2 peter","second peter","2peter","2pet","2 pet"],
+    "1 John":["1 john","first john","1john","1jn","1 jn"],
+    "2 John":["2 john","second john","2john","2jn"],
+    "3 John":["3 john","third john","3john","3jn"],
+    "Jude":["jude"],
+    "Revelation":["revelation","revelations","rev","the book of revelation","the revelation"]
   };
 
+  // Build reverse lookup: alias → standard name
+  const BOOK_LOOKUP = {};
+  for (const [standard, aliases] of Object.entries(BOOKS)) {
+    for (const alias of aliases) {
+      BOOK_LOOKUP[alias] = standard;
+    }
+  }
+
+  // Number words → digits
+  const NUM_WORDS = {
+    "zero":0,"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,
+    "eight":8,"nine":9,"ten":10,"eleven":11,"twelve":12,"thirteen":13,
+    "fourteen":14,"fifteen":15,"sixteen":16,"seventeen":17,"eighteen":18,
+    "nineteen":19,"twenty":20,"twenty one":21,"twenty two":22,"twenty three":23,
+    "twenty four":24,"twenty five":25,"twenty six":26,"twenty seven":27,
+    "twenty eight":28,"twenty nine":29,"thirty":30,"thirty one":31,
+    "forty":40,"fifty":50,"sixty":60,"seventy":70,"eighty":80,"ninety":90,
+    "hundred":100,"one hundred":100,"one hundred and fifty":150
+  };
+
+  function wordsToNum(str) {
+    const s = str.trim().toLowerCase();
+    if (/^\d+$/.test(s)) return parseInt(s);
+    return NUM_WORDS[s] || null;
+  }
+
   function normalizeBook(raw) {
-    return BOOKS[raw.toLowerCase().replace(/\./g,"").trim()] || null;
+    const key = raw.toLowerCase()
+      .replace(/\./g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    return BOOK_LOOKUP[key] || null;
+  }
+
+  // ── SMART REFERENCE PARSER ──
+  // Handles ALL these real preacher speech patterns:
+  // "John 3:16"
+  // "John chapter 3 verse 16"
+  // "John chapter three verse sixteen"
+  // "turn to John 3 verse 16"
+  // "open your Bible to Romans 8:1"
+  // "let's read first Corinthians 13 verse 4 to 7"
+  // "the book of Revelation chapter 21 verse 1"
+  // "go to Psalms 23 verse 1 through 6"
+  // "read with me Ephesians chapter 2 verses 8 and 9"
+
+  function parseReference(rawText) {
+    // Normalize text
+    let text = rawText.toLowerCase()
+      .replace(/[,;!?]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    // Replace number words with digits
+    for (const [word, num] of Object.entries(NUM_WORDS).sort((a,b) => b[0].length - a[0].length)) {
+      const re = new RegExp("\\b" + word + "\\b", "gi");
+      text = text.replace(re, num);
+    }
+
+    // Strip common filler phrases before the reference
+    text = text
+      .replace(/\b(turn|open|go|read|let'?s?\s+read|let us read|we(?:'re| are) going to read|look at|look with me at|i want us to go to|turn with me to|open your bibles? to|the book of|as it says in|it is written in|as written in|we find in|found in|the scripture says|the bible says|according to|in the words of)\b/gi, " ")
+      .replace(/\s+/g, " ").trim();
+
+    // Build book name pattern from all known aliases (longest first to avoid partial matches)
+    const allAliases = Object.keys(BOOK_LOOKUP).sort((a,b) => b.length - a.length);
+    const bookPattern = allAliases.map(a => a.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|");
+
+    // Number pattern — digits or number words already converted
+    const N = "(\\d+)";
+
+    // All patterns — from most specific to least
+    const patterns = [
+      // "John 3:16-18" or "John 3:16–18"
+      new RegExp(`(${bookPattern})\\s+${N}\\s*[:\\s]\\s*${N}\\s*[-–to]+\\s*${N}`, "i"),
+      // "John 3:16"
+      new RegExp(`(${bookPattern})\\s+${N}\\s*[:]\\s*${N}`, "i"),
+      // "John chapter 3 verses 16 to 18" / "verse 16 through 18" / "verse 16 and 17"
+      new RegExp(`(${bookPattern})\\s+(?:chapter\\s*)?${N}\\s+verses?\\s+${N}\\s*(?:to|through|and|-|–)\\s*${N}`, "i"),
+      // "John chapter 3 verse 16"
+      new RegExp(`(${bookPattern})\\s+(?:chapter\\s*)?${N}\\s+verses?\\s+${N}`, "i"),
+      // "John 3 verse 16 to 18"
+      new RegExp(`(${bookPattern})\\s+${N}\\s+verses?\\s+${N}\\s*(?:to|through|and|-|–)\\s*${N}`, "i"),
+      // "John 3 verse 16"
+      new RegExp(`(${bookPattern})\\s+${N}\\s+verses?\\s+${N}`, "i"),
+      // "John chapter 3" (no verse — show chapter start)
+      new RegExp(`(${bookPattern})\\s+chapter\\s+${N}`, "i"),
+    ];
+
+    for (const pattern of patterns) {
+      const m = text.match(pattern);
+      if (m) {
+        const book = normalizeBook(m[1]);
+        if (!book) continue;
+
+        const nums = m.slice(2).filter(Boolean).map(Number);
+        const chapter = nums[0];
+        const verseStart = nums[1] || 1;
+        const verseEnd = nums[2] || verseStart;
+
+        if (chapter) return { book, chapter, verseStart, verseEnd };
+      }
+    }
+
+    return null;
   }
 
   // ── STATE ──
   let listening = false;
   let recognition = null;
   let lastKey = "";
-  let lastTranscript = "";
-  let aiTimer = null;
-  let aiProcessing = false;
   let history = [];
   let currentVerse = null;
 
@@ -781,45 +399,6 @@
     dot.style.background = COLORS[type];
     dot.style.animation = type === "fetching" ? "pulse 1s infinite" : "none";
     document.getElementById("status-msg").textContent = msg;
-  }
-
-  // ── AI REFERENCE EXTRACTOR ──
-  async function extractReferenceWithAI(text) {
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 100,
-          system: `You are a Bible reference extractor. Your ONLY job is to find Bible verse references in speech transcripts from preachers.
-
-Extract any Bible reference mentioned and return ONLY a JSON object like:
-{"book":"John","chapter":3,"verseStart":16,"verseEnd":16}
-
-For a range like "John 3:16-18" return:
-{"book":"John","chapter":3,"verseStart":16,"verseEnd":18}
-
-If NO Bible reference is found, return exactly: null
-
-Rules:
-- Normalize book names (e.g. "first corinthians" → "1 Corinthians")
-- Ignore everything that is not a Bible reference
-- Return ONLY the JSON or null. No explanation. No markdown.`,
-          messages: [{ role: "user", content: `Extract Bible reference from this sermon transcript: "${text}"` }]
-        })
-      });
-
-      const data = await res.json();
-      const raw = data.content?.[0]?.text?.trim();
-      if (!raw || raw === "null") return null;
-      const parsed = JSON.parse(raw);
-      if (parsed && parsed.book && parsed.chapter && parsed.verseStart) return parsed;
-      return null;
-    } catch (e) {
-      console.error("AI error:", e);
-      return null;
-    }
   }
 
   // ── FETCH VERSE ──
@@ -836,7 +415,7 @@ Rules:
       .eq("book", ref.book)
       .eq("chapter", ref.chapter)
       .gte("verse", ref.verseStart)
-      .lte("verse", ref.verseEnd || ref.verseStart)
+      .lte("verse", ref.verseEnd)
       .order("verse", { ascending: true });
 
     if (error || !data || data.length === 0) {
@@ -938,27 +517,13 @@ Rules:
       document.getElementById("transcript-box").style.display = "block";
       document.getElementById("transcript-text").textContent = `"${text}"`;
 
-      // Debounce AI calls — wait 2s after speech stops before sending to AI
-      if (aiTimer) clearTimeout(aiTimer);
-      if (text !== lastTranscript) {
-        lastTranscript = text;
-        aiTimer = setTimeout(async () => {
-          if (aiProcessing) return;
-          aiProcessing = true;
-          document.getElementById("ai-thinking").style.display = "block";
-          document.getElementById("detected-ref").textContent = "";
-
-          const ref = await extractReferenceWithAI(text);
-
-          document.getElementById("ai-thinking").style.display = "none";
-          aiProcessing = false;
-
-          if (ref) {
-            document.getElementById("detected-ref").textContent =
-              `✦ Detected: ${ref.book} ${ref.chapter}:${ref.verseStart}${ref.verseEnd && ref.verseEnd !== ref.verseStart ? "–"+ref.verseEnd : ""}`;
-            await loadVerse(ref);
-          }
-        }, 2000);
+      const ref = parseReference(text);
+      if (ref) {
+        document.getElementById("detected-ref").textContent =
+          `✦ Detected: ${ref.book} ${ref.chapter}:${ref.verseStart}${ref.verseEnd !== ref.verseStart ? "–"+ref.verseEnd : ""}`;
+        loadVerse(ref);
+      } else {
+        document.getElementById("detected-ref").textContent = "";
       }
     };
 
@@ -969,7 +534,7 @@ Rules:
     listening = true;
     document.getElementById("mic-btn").textContent = "⏹ Stop Listening";
     document.getElementById("mic-btn").classList.add("active");
-    setStatus("idle", "Listening — AI will detect Bible references automatically...");
+    setStatus("idle", "Listening...");
   }
 
   // ── MANUAL SEARCH ──
@@ -981,7 +546,6 @@ Rules:
     const verseEnd = verseEndVal ? parseInt(verseEndVal) : verseStart;
 
     if (!bookRaw || !chapter || !verseStart) { setStatus("error", "Please fill in Book, Chapter, and Verse."); return; }
-
     const book = normalizeBook(bookRaw);
     if (!book) { setStatus("error", `Unknown book: "${bookRaw}"`); return; }
 
