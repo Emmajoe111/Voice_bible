@@ -489,13 +489,403 @@
           <div style="color:#b48c3c;font-size:16px;">✦</div>
           <div class="divider-line right"></div>
         </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Church Bible System</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0d0d14; color: #f0ece0; font-family: system-ui, sans-serif; min-height: 100vh; }
+
+    #control-panel { padding: 24px; display: block; }
+
+    #display-view {
+      display: none; min-height: 100vh;
+      background: radial-gradient(ellipse at center, #0a0a1a 0%, #000 100%);
+      align-items: center; justify-content: center;
+      flex-direction: column; padding: 60px 40px;
+      font-family: Georgia, serif; position: relative; text-align: center;
+    }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .label { font-size: 11px; letter-spacing: 4px; color: #b48c3c; text-transform: uppercase; margin-bottom: 4px; }
+    h1 { font-size: 22px; font-weight: 700; color: #f5f0e8; }
+
+    .btn-display {
+      background: linear-gradient(135deg, #b48c3c, #8a6820);
+      border: none; color: #fff; padding: 10px 20px; border-radius: 8px;
+      cursor: pointer; font-size: 13px; font-weight: 600; letter-spacing: 1px;
+    }
+
+    .btn-back {
+      position: fixed; top: 16px; right: 16px; z-index: 999;
+      background: rgba(180,140,60,0.15); border: 1px solid rgba(180,140,60,0.4);
+      color: #b48c3c; padding: 8px 16px; border-radius: 6px;
+      cursor: pointer; font-size: 13px; font-family: sans-serif; display: none;
+    }
+
+    .status-bar {
+      background: #13131e; border-radius: 8px; padding: 12px 16px;
+      margin-bottom: 24px; font-size: 13px;
+      display: flex; align-items: center; gap: 8px;
+      border-left: 3px solid #666; color: #666;
+    }
+
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #666; flex-shrink: 0; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: #13131e; border-radius: 12px; padding: 20px; border: 1px solid #1e1e2e; }
+
+    .btn-mic {
+      width: 100%; padding: 16px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, #1a4a2e, #27ae60);
+      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 16px;
+    }
+    .btn-mic.active { background: linear-gradient(135deg, #8b1a1a, #c0392b); }
+
+    .ai-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(180,140,60,0.1); border: 1px solid rgba(180,140,60,0.3);
+      border-radius: 20px; padding: 4px 10px; font-size: 11px;
+      color: #b48c3c; margin-bottom: 14px; letter-spacing: 1px;
+    }
+
+    .transcript-box { background: #0a0a14; border-radius: 8px; padding: 12px; font-size: 13px; display: none; }
+    .transcript-label { color: #666; font-size: 11px; margin-bottom: 6px; letter-spacing: 2px; }
+    .transcript-text { color: #e0d8c0; line-height: 1.5; margin-bottom: 8px; }
+    .detected-ref { color: #b48c3c; font-size: 12px; }
+    .ai-thinking { color: #666; font-size: 11px; font-style: italic; margin-top: 6px; display: none; }
+
+    .input-group { margin-bottom: 10px; }
+    .input-label { font-size: 11px; color: #666; margin-bottom: 4px; }
+
+    input {
+      width: 100%; background: #0a0a14; border: 1px solid #2a2a3e;
+      border-radius: 6px; padding: 8px 12px; color: #f0ece0;
+      font-size: 14px; outline: none; font-family: inherit;
+    }
+    input:focus { border-color: #b48c3c; }
+
+    .btn-search {
+      width: 100%; padding: 12px;
+      background: linear-gradient(135deg, #b48c3c, #8a6820);
+      border: none; border-radius: 8px;
+      color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px;
+    }
+
+    .verse-card {
+      background: #13131e; border-radius: 12px; padding: 20px;
+      border: 1px solid #2a2a1e; border-left: 3px solid #b48c3c;
+      margin-bottom: 20px; display: none;
+    }
+    .verse-ref { font-size: 16px; font-weight: 700; color: #b48c3c; margin-bottom: 10px; }
+    .verse-text { color: #e0d8c0; line-height: 1.8; font-size: 15px; font-family: Georgia, serif; }
+
+    .history-card { background: #13131e; border-radius: 12px; padding: 20px; border: 1px solid #1e1e2e; display: none; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-bottom: 4px; }
+    .history-item:hover { background: rgba(180,140,60,0.1); }
+    .history-ref { color: #b48c3c; font-size: 14px; }
+    .history-time { color: #444; font-size: 11px; }
+
+    /* Display view */
+    .display-watermark {
+      position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
+      font-size: 18px; color: rgba(180,140,60,0.3);
+      letter-spacing: 8px; text-transform: uppercase; font-family: sans-serif;
+    }
+    .display-reference {
+      color: #b48c3c; font-size: clamp(18px, 3vw, 28px);
+      font-family: sans-serif; font-weight: 600;
+      letter-spacing: 4px; text-transform: uppercase; margin-bottom: 40px; opacity: 0.9;
+    }
+    .display-text {
+      color: #f5f0e8; font-size: clamp(28px, 5vw, 56px);
+      line-height: 1.5; font-weight: 400;
+      text-shadow: 0 2px 20px rgba(180,140,60,0.2); margin-bottom: 40px; max-width: 900px;
+    }
+    .display-divider { display: flex; align-items: center; justify-content: center; gap: 16px; }
+    .divider-line { width: 80px; height: 1px; background: linear-gradient(to right, transparent, #b48c3c); }
+    .divider-line.right { background: linear-gradient(to left, transparent, #b48c3c); }
+    .display-cross { font-size: 80px; opacity: 0.2; margin-bottom: 24px; }
+    .display-waiting-text { color: rgba(245,240,232,0.3); font-size: 24px; font-family: sans-serif; letter-spacing: 2px; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid #b48c3c33; border-top-color: #b48c3c; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  </style>
+</head>
+<body>
+
+<!-- CONTROL PANEL -->
+<div id="control-panel">
+  <div class="header">
+    <div>
+      <div class="label">✦ Church Bible System</div>
+      <h1>Scripture Control Panel</h1>
+    </div>
+    <button class="btn-display" onclick="openDisplay()">📺 Open Display</button>
+  </div>
+
+  <div class="status-bar" id="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-msg">Ready</span>
+  </div>
+
+  <div class="grid">
+    <!-- Mic -->
+    <div class="card">
+      <div class="label">🎤 Voice Detection</div>
+      <br/>
+      <div class="ai-badge">✦ AI-Powered &nbsp;·&nbsp; Filters sermon speech</div>
+      <button class="btn-mic" id="mic-btn" onclick="toggleMic()">▶ Start Listening</button>
+      <div class="transcript-box" id="transcript-box">
+        <div class="transcript-label">HEARD</div>
+        <div class="transcript-text" id="transcript-text"></div>
+        <div class="ai-thinking" id="ai-thinking"><span class="spinner"></span> &nbsp;AI scanning for Bible reference...</div>
+        <div class="detected-ref" id="detected-ref"></div>
       </div>
-    `;
+    </div>
+
+    <!-- Manual Search -->
+    <div class="card">
+      <div class="label">🔍 Manual Search</div>
+      <br/>
+      <div class="input-group">
+        <div class="input-label">Book</div>
+        <input id="inp-book" placeholder="e.g. John" />
+      </div>
+      <div class="input-group">
+        <div class="input-label">Chapter</div>
+        <input id="inp-chapter" placeholder="e.g. 3" type="number" />
+      </div>
+      <div class="input-group">
+        <div class="input-label">Verse</div>
+        <input id="inp-verse" placeholder="e.g. 16" type="number" />
+      </div>
+      <div class="input-group">
+        <div class="input-label">End Verse (optional)</div>
+        <input id="inp-verse-end" placeholder="e.g. 18" type="number" />
+      </div>
+      <button class="btn-search" onclick="manualSearch()">Display Verse</button>
+    </div>
+  </div>
+
+  <!-- Current Verse -->
+  <div class="verse-card" id="verse-card">
+    <div class="label">📖 Now Displaying</div>
+    <br/>
+    <div class="verse-ref" id="verse-ref"></div>
+    <div class="verse-text" id="verse-text"></div>
+  </div>
+
+  <!-- History -->
+  <div class="history-card" id="history-card">
+    <div class="label" style="color:#666;">📋 Recent</div>
+    <br/>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<!-- DISPLAY VIEW -->
+<div id="display-view">
+  <button class="btn-back" id="btn-back" onclick="closeDisplay()">← Control Panel</button>
+  <div class="display-watermark">✦ Live Scripture ✦</div>
+  <div id="display-content">
+    <div>
+      <div class="display-cross">✝</div>
+      <div class="display-waiting-text">Awaiting Scripture...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── SUPABASE ──
+  const { createClient } = supabase;
+  const db = createClient(
+    "https://kjyxnmgkjnpjtpdttblu.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqeXhubWdram5wanRwZHR0Ymx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MDg4NDgsImV4cCI6MjA5NzI4NDg0OH0.T3TphjnNLlKu911qp-CP6kqD2HBk_oR2h76EOUpAlaQ"
+  );
+
+  // ── BOOK ALIASES ──
+  const BOOKS = {
+    "gen":"Genesis","genesis":"Genesis","ex":"Exodus","exo":"Exodus","exodus":"Exodus",
+    "lev":"Leviticus","leviticus":"Leviticus","num":"Numbers","numbers":"Numbers",
+    "deut":"Deuteronomy","deuteronomy":"Deuteronomy","josh":"Joshua","joshua":"Joshua",
+    "judg":"Judges","judges":"Judges","ruth":"Ruth",
+    "1sam":"1 Samuel","1 sam":"1 Samuel","first samuel":"1 Samuel",
+    "2sam":"2 Samuel","2 sam":"2 Samuel","second samuel":"2 Samuel",
+    "1ki":"1 Kings","1 kings":"1 Kings","first kings":"1 Kings",
+    "2ki":"2 Kings","2 kings":"2 Kings","second kings":"2 Kings",
+    "1chr":"1 Chronicles","1 chronicles":"1 Chronicles",
+    "2chr":"2 Chronicles","2 chronicles":"2 Chronicles",
+    "ezra":"Ezra","neh":"Nehemiah","nehemiah":"Nehemiah",
+    "esth":"Esther","esther":"Esther","job":"Job",
+    "ps":"Psalms","psa":"Psalms","psalm":"Psalms","psalms":"Psalms",
+    "prov":"Proverbs","proverbs":"Proverbs","eccl":"Ecclesiastes","ecclesiastes":"Ecclesiastes",
+    "song":"Song of Solomon","songs":"Song of Solomon","sos":"Song of Solomon",
+    "isa":"Isaiah","isaiah":"Isaiah","jer":"Jeremiah","jeremiah":"Jeremiah",
+    "lam":"Lamentations","lamentations":"Lamentations",
+    "ezek":"Ezekiel","ezekiel":"Ezekiel","dan":"Daniel","daniel":"Daniel",
+    "hos":"Hosea","hosea":"Hosea","joel":"Joel","amos":"Amos",
+    "obad":"Obadiah","obadiah":"Obadiah","jon":"Jonah","jonah":"Jonah",
+    "mic":"Micah","micah":"Micah","nah":"Nahum","nahum":"Nahum",
+    "hab":"Habakkuk","habakkuk":"Habakkuk","zeph":"Zephaniah","zephaniah":"Zephaniah",
+    "hag":"Haggai","haggai":"Haggai","zech":"Zechariah","zechariah":"Zechariah",
+    "mal":"Malachi","malachi":"Malachi",
+    "matt":"Matthew","matthew":"Matthew","mark":"Mark","luke":"Luke",
+    "john":"John","jn":"John","acts":"Acts",
+    "rom":"Romans","romans":"Romans",
+    "1cor":"1 Corinthians","1 cor":"1 Corinthians","first corinthians":"1 Corinthians",
+    "2cor":"2 Corinthians","2 cor":"2 Corinthians","second corinthians":"2 Corinthians",
+    "gal":"Galatians","galatians":"Galatians","eph":"Ephesians","ephesians":"Ephesians",
+    "phil":"Philippians","philippians":"Philippians","col":"Colossians","colossians":"Colossians",
+    "1thess":"1 Thessalonians","1 thess":"1 Thessalonians",
+    "2thess":"2 Thessalonians","2 thess":"2 Thessalonians",
+    "1tim":"1 Timothy","1 tim":"1 Timothy","first timothy":"1 Timothy",
+    "2tim":"2 Timothy","2 tim":"2 Timothy","second timothy":"2 Timothy",
+    "titus":"Titus","tit":"Titus","philem":"Philemon","philemon":"Philemon",
+    "heb":"Hebrews","hebrews":"Hebrews","jas":"James","james":"James",
+    "1pet":"1 Peter","1 pet":"1 Peter","first peter":"1 Peter",
+    "2pet":"2 Peter","2 pet":"2 Peter","second peter":"2 Peter",
+    "1john":"1 John","1 john":"1 John","first john":"1 John",
+    "2john":"2 John","2 john":"2 John","3john":"3 John","3 john":"3 John",
+    "jude":"Jude","rev":"Revelation","revelation":"Revelation","revelations":"Revelation"
+  };
+
+  function normalizeBook(raw) {
+    return BOOKS[raw.toLowerCase().replace(/\./g,"").trim()] || null;
+  }
+
+  // ── STATE ──
+  let listening = false;
+  let recognition = null;
+  let lastKey = "";
+  let lastTranscript = "";
+  let aiTimer = null;
+  let aiProcessing = false;
+  let history = [];
+  let currentVerse = null;
+
+  // ── STATUS ──
+  const COLORS = { idle:"#666", fetching:"#b48c3c", found:"#4caf79", error:"#e05555" };
+  function setStatus(type, msg) {
+    const bar = document.getElementById("status-bar");
+    const dot = document.getElementById("status-dot");
+    bar.style.borderLeftColor = COLORS[type];
+    bar.style.color = COLORS[type];
+    dot.style.background = COLORS[type];
+    dot.style.animation = type === "fetching" ? "pulse 1s infinite" : "none";
+    document.getElementById("status-msg").textContent = msg;
+  }
+
+  // ── AI REFERENCE EXTRACTOR ──
+  async function extractReferenceWithAI(text) {
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 100,
+          system: `You are a Bible reference extractor. Your ONLY job is to find Bible verse references in speech transcripts from preachers.
+
+Extract any Bible reference mentioned and return ONLY a JSON object like:
+{"book":"John","chapter":3,"verseStart":16,"verseEnd":16}
+
+For a range like "John 3:16-18" return:
+{"book":"John","chapter":3,"verseStart":16,"verseEnd":18}
+
+If NO Bible reference is found, return exactly: null
+
+Rules:
+- Normalize book names (e.g. "first corinthians" → "1 Corinthians")
+- Ignore everything that is not a Bible reference
+- Return ONLY the JSON or null. No explanation. No markdown.`,
+          messages: [{ role: "user", content: `Extract Bible reference from this sermon transcript: "${text}"` }]
+        })
+      });
+
+      const data = await res.json();
+      const raw = data.content?.[0]?.text?.trim();
+      if (!raw || raw === "null") return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.book && parsed.chapter && parsed.verseStart) return parsed;
+      return null;
+    } catch (e) {
+      console.error("AI error:", e);
+      return null;
+    }
+  }
+
+  // ── FETCH VERSE ──
+  async function loadVerse(ref) {
+    const key = `${ref.book}-${ref.chapter}-${ref.verseStart}-${ref.verseEnd}`;
+    if (key === lastKey) return;
+    lastKey = key;
+
+    setStatus("fetching", `Looking up ${ref.book} ${ref.chapter}:${ref.verseStart}...`);
+
+    const { data, error } = await db
+      .from("bible")
+      .select("book, chapter, verse, text")
+      .eq("book", ref.book)
+      .eq("chapter", ref.chapter)
+      .gte("verse", ref.verseStart)
+      .lte("verse", ref.verseEnd || ref.verseStart)
+      .order("verse", { ascending: true });
+
+    if (error || !data || data.length === 0) {
+      setStatus("error", error ? "DB error: " + error.message : `Not found: ${ref.book} ${ref.chapter}:${ref.verseStart}`);
+      return;
+    }
+
+    const refStr = data.length > 1
+      ? `${ref.book} ${ref.chapter}:${ref.verseStart}–${data[data.length-1].verse}`
+      : `${ref.book} ${ref.chapter}:${ref.verseStart}`;
+
+    currentVerse = { reference: refStr, lines: data.map(d => ({ verse: d.verse, text: d.text })) };
+    setStatus("found", `Displaying ${refStr}`);
+    showVerseInControl(currentVerse);
+    showVerseOnDisplay(currentVerse);
+    addHistory(currentVerse);
+  }
+
+  function showVerseInControl(v) {
+    document.getElementById("verse-card").style.display = "block";
+    document.getElementById("verse-ref").textContent = v.reference;
+    let html = "";
+    v.lines.forEach(l => {
+      const sup = v.lines.length > 1 ? `<sup style="color:#b48c3c;font-size:0.7em;margin-right:3px;">${l.verse}</sup>` : "";
+      html += `<span>${sup}${l.text} </span>`;
+    });
+    document.getElementById("verse-text").innerHTML = html;
+  }
+
+  function showVerseOnDisplay(v) {
+    let linesHtml = "";
+    v.lines.forEach(l => {
+      const sup = v.lines.length > 1 ? `<sup style="color:#b48c3c;font-size:0.5em;margin-right:6px;vertical-align:super;">${l.verse}</sup>` : "";
+      linesHtml += `<div style="margin-bottom:16px;">${sup}${l.text}</div>`;
+    });
+    document.getElementById("display-content").innerHTML = `
+      <div style="max-width:900px;">
+        <div class="display-reference">${v.reference}</div>
+        <div class="display-text">${linesHtml}</div>
+        <div class="display-divider">
+          <div class="divider-line"></div>
+          <div style="color:#b48c3c;font-size:16px;">✦</div>
+          <div class="divider-line right"></div>
+        </div>
+      </div>`;
   }
 
   function addHistory(v) {
-    const time = new Date().toLocaleTimeString();
-    history.unshift({ ...v, timestamp: time });
+    history.unshift({ ...v, timestamp: new Date().toLocaleTimeString() });
     if (history.length > 10) history.pop();
     renderHistory();
   }
@@ -503,14 +893,13 @@
   function renderHistory() {
     const card = document.getElementById("history-card");
     const list = document.getElementById("history-list");
-    if (history.length === 0) { card.style.display = "none"; return; }
+    if (!history.length) { card.style.display = "none"; return; }
     card.style.display = "block";
     list.innerHTML = history.map((h, i) => `
-      <div class="history-item" onclick="redisplay(${i})" style="${i===0?'background:rgba(180,140,60,0.08);':''}">
+      <div class="history-item" onclick="redisplay(${i})" style="${i===0?"background:rgba(180,140,60,0.08);":""}">
         <span class="history-ref">${h.reference}</span>
         <span class="history-time">${h.timestamp}</span>
-      </div>
-    `).join("");
+      </div>`).join("");
   }
 
   function redisplay(i) {
@@ -522,22 +911,18 @@
 
   // ── MIC ──
   function toggleMic() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setStatus("error", "Speech recognition not supported. Use Chrome browser.");
-      return;
-    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { setStatus("error", "Speech recognition not supported. Use Chrome."); return; }
 
     if (listening) {
-      recognition.stop();
-      listening = false;
+      recognition.stop(); listening = false;
       document.getElementById("mic-btn").textContent = "▶ Start Listening";
       document.getElementById("mic-btn").classList.remove("active");
       setStatus("idle", "Microphone off.");
       return;
     }
 
-    recognition = new SpeechRecognition();
+    recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
@@ -548,28 +933,43 @@
         text += e.results[i][0].transcript;
       }
       text = text.trim();
+      if (!text) return;
+
       document.getElementById("transcript-box").style.display = "block";
       document.getElementById("transcript-text").textContent = `"${text}"`;
 
-      const ref = parseReference(text);
-      if (ref) {
-        document.getElementById("detected-ref").textContent =
-          `✦ Detected: ${ref.book} ${ref.chapter}:${ref.verseStart}${ref.verseEnd !== ref.verseStart ? "–" + ref.verseEnd : ""}`;
-        loadVerse(ref);
+      // Debounce AI calls — wait 2s after speech stops before sending to AI
+      if (aiTimer) clearTimeout(aiTimer);
+      if (text !== lastTranscript) {
+        lastTranscript = text;
+        aiTimer = setTimeout(async () => {
+          if (aiProcessing) return;
+          aiProcessing = true;
+          document.getElementById("ai-thinking").style.display = "block";
+          document.getElementById("detected-ref").textContent = "";
+
+          const ref = await extractReferenceWithAI(text);
+
+          document.getElementById("ai-thinking").style.display = "none";
+          aiProcessing = false;
+
+          if (ref) {
+            document.getElementById("detected-ref").textContent =
+              `✦ Detected: ${ref.book} ${ref.chapter}:${ref.verseStart}${ref.verseEnd && ref.verseEnd !== ref.verseStart ? "–"+ref.verseEnd : ""}`;
+            await loadVerse(ref);
+          }
+        }, 2000);
       }
     };
 
-    recognition.onerror = (e) => {
-      if (e.error !== "no-speech") setStatus("error", "Mic error: " + e.error);
-    };
-
+    recognition.onerror = (e) => { if (e.error !== "no-speech") setStatus("error", "Mic error: " + e.error); };
     recognition.onend = () => { if (listening) recognition.start(); };
 
     recognition.start();
     listening = true;
     document.getElementById("mic-btn").textContent = "⏹ Stop Listening";
     document.getElementById("mic-btn").classList.add("active");
-    setStatus("idle", "Listening...");
+    setStatus("idle", "Listening — AI will detect Bible references automatically...");
   }
 
   // ── MANUAL SEARCH ──
@@ -580,18 +980,12 @@
     const verseEndVal = document.getElementById("inp-verse-end").value;
     const verseEnd = verseEndVal ? parseInt(verseEndVal) : verseStart;
 
-    if (!bookRaw || !chapter || !verseStart) {
-      setStatus("error", "Please fill in Book, Chapter, and Verse.");
-      return;
-    }
+    if (!bookRaw || !chapter || !verseStart) { setStatus("error", "Please fill in Book, Chapter, and Verse."); return; }
 
     const book = normalizeBook(bookRaw);
-    if (!book) {
-      setStatus("error", `Unknown book: "${bookRaw}"`);
-      return;
-    }
+    if (!book) { setStatus("error", `Unknown book: "${bookRaw}"`); return; }
 
-    lastKey = ""; // force reload
+    lastKey = "";
     await loadVerse({ book, chapter, verseStart, verseEnd });
   }
 
@@ -609,10 +1003,7 @@
     document.getElementById("btn-back").style.display = "none";
   }
 
-  // Enter key on manual inputs
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") manualSearch();
-  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter") manualSearch(); });
 </script>
 </body>
 </html>
