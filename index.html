@@ -527,8 +527,20 @@
       }
     };
 
-    recognition.onerror = (e) => { if (e.error !== "no-speech") setStatus("error", "Mic error: " + e.error); };
-    recognition.onend = () => { if (listening) recognition.start(); };
+    recognition.onerror = (e) => {
+      if (e.error === "not-allowed") {
+        listening = false;
+        document.getElementById("mic-btn").textContent = "▶ Start Listening";
+        document.getElementById("mic-btn").classList.remove("active");
+        setStatus("idle", "⚠ Mic permission denied. Please allow microphone access.");
+      }
+      // All other errors silently ignored — bad mic, network drops, etc.
+    };
+    recognition.onend = () => {
+      if (listening) {
+        setTimeout(() => { try { recognition.start(); } catch(e) {} }, 300);
+      }
+    };
 
     recognition.start();
     listening = true;
